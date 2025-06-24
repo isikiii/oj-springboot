@@ -9,8 +9,25 @@ public class Problem {
     private Integer timeLimit;
     private Integer memoryLimit;
     private LocalDateTime createdAt;
+    private String input;
+    private String output;
 
     // Getters and Setters
+    public String getInput() {
+        return input;
+    }
+
+    public void setInput(String input) {
+        this.input = input;
+    }
+
+    public String getOutput() {
+        return output;
+    }
+
+    public void setOutput(String output) {
+        this.output = output;
+    }
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

@@ -14,6 +14,18 @@ import java.util.List;
 @Repository
 public class SubmissionDaoImpl extends JdbcDaoSupport implements SubmissionDao {
 
+    private final RowMapper<Submission> rowMapper = (rs, rowNum) -> {
+        Submission s = new Submission();
+        s.setId(rs.getInt("id"));
+        s.setUsername(rs.getString("username"));
+        s.setProblemId(rs.getInt("problem_id"));
+        s.setLanguage(rs.getString("language"));
+        s.setCode(rs.getString("code"));
+        s.setStatus(rs.getString("status"));
+        s.setSubmitTime(rs.getTimestamp("submit_time").toLocalDateTime());
+        return s;
+    };
+
     private final DataSource dataSource;
 
     public SubmissionDaoImpl(DataSource dataSource) {
@@ -26,34 +38,27 @@ public class SubmissionDaoImpl extends JdbcDaoSupport implements SubmissionDao {
     }
 
     @Override
-    public void save(Submission submission) {
+    public void save(Submission s) {
         String sql = "INSERT INTO submissions (username, problem_id, language, code, status) VALUES (?, ?, ?, ?, ?)";
         getJdbcTemplate().update(sql,
-                submission.getUsername(),
-                submission.getProblemId(),
-                submission.getLanguage(),
-                submission.getCode(),
-                submission.getStatus());
+                s.getUsername(), s.getProblemId(), s.getLanguage(), s.getCode(), s.getStatus());
     }
 
     @Override
     public List<Submission> findAllByUsername(String username) {
-        String sql = "SELECT * FROM submissions WHERE username = ? ORDER BY submit_time DESC";
-        return getJdbcTemplate().query(sql, new SubmissionRowMapper(), username);
+        String sql = "SELECT * FROM submissions WHERE username = ? ORDER BY id DESC";
+        return getJdbcTemplate().query(sql, rowMapper, username);
     }
 
-    private static class SubmissionRowMapper implements RowMapper<Submission> {
-        @Override
-        public Submission mapRow(ResultSet rs, int rowNum) throws SQLException {
-            Submission s = new Submission();
-            s.setId(rs.getInt("id"));
-            s.setUsername(rs.getString("username"));
-            s.setProblemId(rs.getInt("problem_id"));
-            s.setLanguage(rs.getString("language"));
-            s.setCode(rs.getString("code"));
-            s.setStatus(rs.getString("status"));
-            s.setSubmitTime(rs.getTimestamp("submit_time").toLocalDateTime());
-            return s;
-        }
+    @Override
+    public List<Submission> findPending() {
+        String sql = "SELECT * FROM submissions WHERE status = 'PENDING' ORDER BY submit_time";
+        return getJdbcTemplate().query(sql, rowMapper);
+    }
+
+    @Override
+    public void updateStatus(int id, String status) {
+        String sql = "UPDATE submissions SET status = ? WHERE id = ?";
+        getJdbcTemplate().update(sql, status, id);
     }
 }
